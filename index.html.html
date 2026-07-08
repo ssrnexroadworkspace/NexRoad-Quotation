@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NexRoad Logistics - Quotation Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root{
+    --navy:#1a1a2e;
+    --orange:#E8581A;
+    --offwhite:#f5f5f0;
+    --border:#dcdcd4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:'Segoe UI', Arial, sans-serif;
+    background:#f5f5f0;
+    color:#1a1a2e;
+    margin:0;
+    padding:20px;
+  }
+  .app-wrap{
+    max-width:1100px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:20px;
+  }
+  h1{
+    color:#1a1a2e;
+    font-size:22px;
+    margin:0 0 4px 0;
+  }
+  .subtitle{
+    color:#666;
+    font-size:13px;
+    margin-bottom:10px;
+  }
+  .panel{
+    background:#fff;
+    border:1px solid #dcdcd4;
+    border-radius:8px;
+    padding:20px;
+  }
+  .panel h2{
+    font-size:15px;
+    color:#E8581A;
+    border-bottom:2px solid #E8581A;
+    padding-bottom:6px;
+    margin-top:0;
+  }
+  .grid2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  label{
+    font-size:12px;
+    font-weight:600;
+    color:#1a1a2e;
+    display:block;
+    margin-bottom:4px;
+  }
+  input, select, textarea{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid #dcdcd4;
+    border-radius:5px;
+    font-size:13px;
+    font-family:inherit;
+    color:#1a1a2e;
+  }
+  textarea{resize:vertical;}
+  .field{margin-bottom:12px;}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:8px;
+  }
+  th{
+    background:#1a1a2e;
+    color:#fff;
+    font-size:12px;
+    padding:8px 6px;
+    text-align:left;
+  }
+  td{
+    padding:6px;
+    border-bottom:1px solid #dcdcd4;
+    font-size:13px;
+  }
+  td input, td select{padding:6px 8px; font-size:12px;}
+  .row-actions{text-align:center; width:40px;}
+  .btn{
+    background:#E8581A;
+    color:#fff;
+    border:none;
+    padding:9px 16px;
+    border-radius:5px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .btn:hover{opacity:0.9;}
+  .btn-secondary{
+    background:#1a1a2e;
+  }
+  .btn-remove{
+    background:#c0392b;
+    color:#fff;
+    border:none;
+    border-radius:4px;
+    width:26px;
+    height:26px;
+    cursor:pointer;
+    font-size:14px;
+    line-height:1;
+  }
+  .actions-bar{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+  .totals-box{
+    margin-top:14px;
+    display:flex;
+    justify-content:flex-end;
+  }
+  .totals-table{
+    width:300px;
+  }
+  .totals-table td{
+    font-size:13px;
+    padding:5px 6px;
+  }
+  .totals-table .grand{
+    font-weight:700;
+    font-size:15px;
+    color:#E8581A;
+    border-top:2px solid #1a1a2e;
+  }
+  /* PDF preview styling */
+  #pdf-preview{
+    background:#fff;
+    padding:0;
+  }
+  .doc-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:38px 40px;
+    border-bottom:3px solid #E8581A;
+    box-shadow:0 3px 0 rgba(232,88,26,0.35);
+    background:linear-gradient(135deg, #1a1a2e 0%, #22223f 55%, #1a1a2e 100%);
+    color:#fff;
+  }
+  .doc-header .brand{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .doc-header .brand-name{
+    font-size:24px;
+    font-weight:800;
+    letter-spacing:0.5px;
+    line-height:1.1;
+  }
+  .doc-header .brand-name-nex{
+    color:#E8581A;
+  }
+  .doc-header .brand-name-rest{
+    color:#ffffff;
+  }
+  .doc-header .brand .tagline{
+    font-size:10.5px;
+    color:#f0a878;
+    letter-spacing:0.6px;
+    text-transform:uppercase;
+    font-weight:300;
+    margin-top:3px;
+  }
+  .doc-header .contact-strip{
+    margin-top:6px;
+    font-size:9.5px;
+    color:rgba(255,255,255,0.6);
+    letter-spacing:0.2px;
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:5px;
+  }
+  .doc-header .contact-strip .dot{
+    color:#E8581A;
+    opacity:0.7;
+  }
+  .doc-header .brand-text{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  .header-divider{
+    width:1px;
+    align-self:stretch;
+    background:rgba(255,255,255,0.18);
+    margin:0 20px;
+  }
+  .doc-header .meta{
+    text-align:right;
+    font-size:11.5px;
+    line-height:1.55;
+    flex-shrink:0;
+  }
+  .doc-header .meta .qlabel{
+    font-size:9.5px;
+    letter-spacing:1px;
+    color:rgba(255,255,255,0.55);
+    text-transform:uppercase;
+  }
+  .doc-header .meta .qnum{
+    font-size:17px;
+    font-weight:700;
+    color:#E8581A;
+    margin-bottom:4px;
+  }
+  .doc-header .meta .meta-row{
+    color:rgba(255,255,255,0.85);
+  }
+  .doc-header .meta .meta-divider{
+    height:1px;
+    background:rgba(255,255,255,0.15);
+    margin:6px 0;
+  }
+  .doc-body{padding:24px 32px;}
+  .parties{
+    display:flex;
+    justify-content:space-between;
+    gap:20px;
+    margin-bottom:18px;
+  }
+  .party-box{
+    flex:1;
+    background:#f5f5f0;
+    border-left:3px solid #E8581A;
+    padding:10px 14px;
+    border-radius:4px;
+  }
+  .party-box h4{
+    margin:0 0 6px 0;
+    font-size:11px;
+    text-transform:uppercase;
+    color:#E8581A;
+    letter-spacing:0.5px;
+  }
+  .party-box p{margin:2px 0; font-size:12.5px;}
+  .doc-table{
+    width:100%;
+    border-collapse:collapse;
+    margin:16px 0;
+  }
+  .doc-table th{
+    background:#1a1a2e;
+    color:#fff;
+    font-size:11.5px;
+    padding:8px;
+    text-transform:uppercase;
+  }
+  .doc-table td{
+    padding:8px;
+    font-size:12.5px;
+    border-bottom:1px solid #dcdcd4;
+  }
+  .doc-totals{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:8px;
+  }
+  .doc-totals table{width:280px;}
+  .doc-totals td{padding:5px 8px; font-size:12.5px;}
+  .doc-totals .grand-row td{
+    font-weight:700;
+    font-size:14px;
+    color:#E8581A;
+    border-top:2px solid #1a1a2e;
+    padding-top:8px;
+  }
+  .terms-section{
+    margin-top:20px;
+    background:#f5f5f0;
+    padding:14px 16px;
+    border-radius:6px;
+  }
+  .terms-section h4{
+    margin:0 0 8px 0;
+    font-size:12px;
+    color:#1a1a2e;
+    text-transform:uppercase;
+  }
+  .terms-section ul{
+    margin:0;
+    padding-left:18px;
+    font-size:11px;
+    color:#444;
+    line-height:1.6;
+  }
+  .doc-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    padding:20px 32px;
+    border-top:2px solid #dcdcd4;
+    margin-top:10px;
+  }
+  .doc-footer .sign{
+    text-align:center;
+    font-size:11px;
+    color:#666;
+  }
+  .doc-footer .sign .line{
+    width:160px;
+    border-top:1px solid #1a1a2e;
+    margin-top:36px;
+    padding-top:4px;
+  }
+  .doc-footer .contact{
+    font-size:11px;
+    color:#666;
+    text-align:right;
+  }
+  .doc-footer .contact strong{color:#1a1a2e;}
+  @media print{
+    body{padding:0; background:#fff;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app-wrap">
+  <div>
+    <h1>NexRoad Logistics — Quotation Generator</h1>
+    <div class="subtitle">Fill in the details below, then generate a branded PDF quotation.</div>
+  </div>
+
+  <!-- INPUT FORM -->
+  <div class="panel">
+    <h2>Quotation Details</h2>
+    <div class="grid2">
+      <div class="field">
+        <label>Quotation Number</label>
+        <input type="text" id="quoteNumber" value="NRL-Q-001">
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="quoteDate">
+      </div>
+      <div class="field">
+        <label>Valid Until</label>
+        <input type="date" id="validUntil">
+      </div>
+      <div class="field">
+        <label>Vehicle Type</label>
+        <select id="vehicleType">
+          <option>8ft Tata Ace / Chota Hathi</option>
+          <option>10ft Truck</option>
+          <option>12ft Truck</option>
+          <option>14ft Truck</option>
+          <option>17ft Truck</option>
+          <option>19ft Truck</option>
+          <option>20ft Truck (Standard)</option>
+          <option selected>20ft SXL Truck</option>
+          <option>22ft Truck</option>
+          <option>22ft SXL Truck</option>
+          <option>24ft Truck</option>
+          <option>24ft SXL Truck</option>
+          <option>28ft Truck</option>
+          <option>32ft Single Axle (SXL) Trailer</option>
+          <option>32ft Multi Axle (MXL) Trailer</option>
+          <option>34ft Trailer</option>
+          <option>40ft Container Trailer (Single Axle)</option>
+          <option>40ft Container Trailer (Multi Axle)</option>
+          <option>Flatbed Trailer</option>
+          <option>Low Bed Trailer (Heavy/ODC Equipment)</option>
+          <option>Open Body Trailer</option>
+          <option>Closed Container / Container Truck</option>
+        </select>
+      </div>
+    </div>
+
+    <h2 style="margin-top:20px;">Client Details</h2>
+    <div class="grid2">
+      <div class="field">
+        <label>Client / Company Name</label>
+        <input type="text" id="clientName" placeholder="e.g. ABC Enterprises Pvt Ltd">
+      </div>
+      <div class="field">
+        <label>Client GSTIN</label>
+        <input type="text" id="clientGSTIN" placeholder="e.g. 19XXXXX1234X1ZX">
+      </div>
+      <div class="field">
+        <label>Client Address</label>
+        <input type="text" id="clientAddress" placeholder="City, State">
+      </div>
+      <div class="field">
+        <label>Contact Person / Phone</label>
+        <input type="text" id="clientContact" placeholder="Name, Phone">
+      </div>
+    </div>
+
+    <h2 style="margin-top:20px;">Route Details</h2>
+    <div class="grid2">
+      <div class="field">
+        <label>Origin (Pickup)</label>
+        <input type="text" id="origin" placeholder="e.g. Kolkata, West Bengal">
+      </div>
+      <div class="field">
+        <label>Destination (Drop)</label>
+        <input type="text" id="destination" placeholder="e.g. Delhi, NCR">
+      </div>
+      <div class="field">
+        <label>Approx. Distance (km)</label>
+        <input type="number" id="distance" placeholder="e.g. 1450">
+      </div>
+      <div class="field">
+        <label>Estimated Transit Time</label>
+        <input type="text" id="transitTime" placeholder="e.g. 3-4 days">
+      </div>
+    </div>
+
+    <h2 style="margin-top:20px;">Payment & GST</h2>
+    <div class="grid2">
+      <div class="field">
+        <label>Advance Payment</label>
+        <div style="display:flex; gap:8px;">
+          <select id="advanceType" style="width:110px; flex-shrink:0;" onchange="calculateTotals()">
+            <option value="percent">Percentage %</option>
+            <option value="rupees">Rupees ₹</option>
+          </select>
+          <input type="number" id="advanceValue" placeholder="e.g. 30" min="0" step="0.01" onchange="calculateTotals()">
+        </div>
+      </div>
+      <div class="field">
+        <label>GST Applicable?</label>
+        <select id="gstApplicable" onchange="toggleGST()">
+          <option value="no" selected>No (Standard - GST not applicable)</option>
+          <option value="yes">Yes (Client requires GST invoice)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Detention Charges Rate (per day, if applicable)</label>
+        <input type="text" id="detentionRate" placeholder="e.g. ₹2,000 per day">
+      </div>
+    </div>
+
+    <h2 style="margin-top:20px;">Line Items</h2>
+    <table id="lineItemsTable">
+      <thead>
+        <tr>
+          <th style="width:34%">Description</th>
+          <th style="width:12%">Qty</th>
+          <th style="width:12%">Unit</th>
+          <th style="width:18%">Rate (₹)</th>
+          <th style="width:18%">Amount (₹)</th>
+          <th class="row-actions"></th>
+        </tr>
+      </thead>
+      <tbody id="lineItemsBody"></tbody>
+    </table>
+    <div class="actions-bar">
+      <button class="btn btn-secondary" onclick="addLineItem()">+ Add Line Item</button>
+    </div>
+
+    <div class="totals-box">
+      <table class="totals-table">
+        <tr><td>Subtotal</td><td style="text-align:right;">₹ <span id="subtotalDisplay">0.00</span></td></tr>
+        <tr id="gstRow" style="display:none;">
+          <td>
+            GST %
+            <input type="number" id="gstPercent" value="18" style="width:60px; display:inline-block; margin-left:6px;" onchange="calculateTotals()">
+          </td>
+          <td style="text-align:right;">₹ <span id="gstDisplay">0.00</span></td>
+        </tr>
+        <tr class="grand"><td>Grand Total</td><td style="text-align:right;">₹ <span id="grandTotalDisplay">0.00</span></td></tr>
+      </table>
+    </div>
+
+    <h2 style="margin-top:20px;">Additional Terms (optional notes)</h2>
+    <div class="field">
+      <textarea id="extraNotes" rows="3" placeholder="Any additional notes specific to this quotation..."></textarea>
+    </div>
+
+    <div class="actions-bar">
+      <button class="btn" onclick="generatePDF()">📄 Generate PDF</button>
+    </div>
+  </div>
+
+  <!-- PDF PREVIEW (hidden template rendered for export) -->
+  <div style="position:absolute; left:-99999px; top:0; width:794px;">
+    <div id="pdf-preview">
+      <div class="doc-header">
+        <div class="brand">
+          <div class="brand-text">
+            <div class="brand-name"><span class="brand-name-nex">Nex</span><span class="brand-name-rest">Road Logistics</span></div>
+            <div class="tagline">India's Trusted Full Truck Load Logistics Partner</div>
+          </div>
+        </div>
+        <div class="header-divider"></div>
+        <div class="meta">
+          <div class="qlabel">QUOTATION NO.</div>
+          <div class="qnum" id="pv-quoteNumber">NRL-Q-001</div>
+          <div class="meta-row">Date: <span id="pv-quoteDate">-</span></div>
+          <div class="meta-row">Valid Until: <span id="pv-validUntil">-</span></div>
+        </div>
+      </div>
+
+      <div class="doc-body">
+        <div class="parties">
+          <div class="party-box">
+            <h4>Quotation For</h4>
+            <p id="pv-clientName">-</p>
+            <p id="pv-clientAddress">-</p>
+            <p id="pv-clientContact">-</p>
+            <p id="pv-clientGSTIN">-</p>
+          </div>
+          <div class="party-box">
+            <h4>Shipment Route</h4>
+            <p><strong>From:</strong> <span id="pv-origin">-</span></p>
+            <p><strong>To:</strong> <span id="pv-destination">-</span></p>
+            <p><strong>Distance:</strong> <span id="pv-distance">-</span> km</p>
+            <p><strong>Transit:</strong> <span id="pv-transitTime">-</span></p>
+            <p><strong>Vehicle:</strong> <span id="pv-vehicleType">-</span></p>
+          </div>
+        </div>
+
+        <table class="doc-table">
+          <thead>
+            <tr><th>Description</th><th>Qty</th><th>Unit</th><th>Rate (₹)</th><th>Amount (₹)</th></tr>
+          </thead>
+          <tbody id="pv-lineItemsBody"></tbody>
+        </table>
+
+        <div class="doc-totals">
+          <table>
+            <tr><td>Subtotal</td><td style="text-align:right;">₹ <span id="pv-subtotal">0.00</span></td></tr>
+            <tr id="pv-gstRow" style="display:none;"><td>GST (<span id="pv-gstPercent">18</span>%)</td><td style="text-align:right;">₹ <span id="pv-gst">0.00</span></td></tr>
+            <tr class="grand-row"><td>Grand Total</td><td style="text-align:right;">₹ <span id="pv-grandTotal">0.00</span></td></tr>
+          </table>
+        </div>
+
+        <div id="pv-advanceWrap" style="display:none; margin-top:6px; background:#f5f5f0; border-left:3px solid #E8581A; padding:8px 14px; border-radius:4px;">
+          <strong style="font-size:12px; color:#1a1a2e;">Advance Payment Required: </strong>
+          <span style="font-size:12px; color:#1a1a2e;" id="pv-advancePayment"></span>
+        </div>
+
+        <div class="terms-section">
+          <h4>Terms & Conditions</h4>
+          <ul>
+            <li>Rates quoted are indicative and subject to change based on fuel prices, tolls, and route conditions at time of dispatch.</li>
+            <li>Loading/unloading labour charges, if applicable, are extra unless otherwise specified.</li>
+            <li>Detention charges applicable beyond 24 hours of free time at loading/unloading points<span id="pv-detentionRateText"></span>.</li>
+            <li>Prohibited goods (explosives, contraband, hazardous materials without proper documentation) will not be transported.</li>
+            <li>Payment terms: as specified above in this quotation.</li>
+            <li id="pv-gstClause">GST is not applicable on this freight service. If a GST invoice is required by the client, GST will be charged extra as per prevailing government rates.</li>
+            <li>This quotation is valid until the date mentioned above.</li>
+          </ul>
+          <div id="pv-extraNotesWrap" style="margin-top:8px; display:none;">
+            <strong style="font-size:11px;">Additional Notes:</strong>
+            <p style="font-size:11px; margin:4px 0 0 0;" id="pv-extraNotes"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="doc-footer">
+        <div class="sign">
+          <div class="line">Indal Kumar Singh<br>Authorized Signatory, NexRoad Logistics</div>
+        </div>
+        <div class="contact">
+          <strong>NexRoad Logistics</strong><br>
+          135/A Chittaranjan Avenue, Room No. 33, 4th Floor<br>
+          Kolkata - 700007, West Bengal, India<br>
+          GSTIN: 19BRKPS6645F2Z6 &nbsp;|&nbsp; +91 9163526043<br>
+          Contact@nexroadlogistics.com &nbsp;|&nbsp; www.nexroadlogistics.com
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let lineItemCount = 0;
+
+function addLineItem(desc="", qty=1, unit="Trip", rate=0){
+  lineItemCount++;
+  const id = "li_" + lineItemCount;
+  const tbody = document.getElementById("lineItemsBody");
+  const tr = document.createElement("tr");
+  tr.id = id;
+  tr.innerHTML = `
+    <td><input type="text" class="li-desc" value="${desc}" placeholder="e.g. Freight charges Kolkata to Delhi"></td>
+    <td><input type="number" class="li-qty" value="${qty}" min="0" step="1" onchange="calculateTotals()"></td>
+    <td>
+      <select class="li-unit">
+        <option ${unit==="Trip"?"selected":""}>Trip</option>
+        <option ${unit==="Ton"?"selected":""}>Ton</option>
+        <option ${unit==="Km"?"selected":""}>Km</option>
+        <option ${unit==="Day"?"selected":""}>Day</option>
+        <option ${unit==="Unit"?"selected":""}>Unit</option>
+      </select>
+    </td>
+    <td><input type="number" class="li-rate" value="${rate}" min="0" step="0.01" onchange="calculateTotals()"></td>
+    <td class="li-amount">0.00</td>
+    <td class="row-actions"><button class="btn-remove" onclick="removeLineItem('${id}')">×</button></td>
+  `;
+  tbody.appendChild(tr);
+  calculateTotals();
+}
+
+function removeLineItem(id){
+  const row = document.getElementById(id);
+  if(row) row.remove();
+  calculateTotals();
+}
+
+function toggleGST(){
+  const isGST = document.getElementById("gstApplicable").value === "yes";
+  document.getElementById("gstRow").style.display = isGST ? "table-row" : "none";
+  calculateTotals();
+}
+
+function calculateTotals(){
+  const rows = document.querySelectorAll("#lineItemsBody tr");
+  let subtotal = 0;
+  rows.forEach(row => {
+    const qty = parseFloat(row.querySelector(".li-qty").value) || 0;
+    const rate = parseFloat(row.querySelector(".li-rate").value) || 0;
+    const amount = qty * rate;
+    row.querySelector(".li-amount").textContent = amount.toFixed(2);
+    subtotal += amount;
+  });
+  const isGST = document.getElementById("gstApplicable").value === "yes";
+  const gstPercent = isGST ? (parseFloat(document.getElementById("gstPercent").value) || 0) : 0;
+  const gstAmount = subtotal * (gstPercent/100);
+  const grandTotal = subtotal + gstAmount;
+
+  document.getElementById("subtotalDisplay").textContent = subtotal.toFixed(2);
+  document.getElementById("gstDisplay").textContent = gstAmount.toFixed(2);
+  document.getElementById("grandTotalDisplay").textContent = grandTotal.toFixed(2);
+}
+
+function formatDate(dateStr){
+  if(!dateStr) return "-";
+  const d = new Date(dateStr);
+  if(isNaN(d)) return "-";
+  return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function generatePDF(){
+  // Populate preview from form
+  document.getElementById("pv-quoteNumber").textContent = document.getElementById("quoteNumber").value || "NRL-Q-001";
+  document.getElementById("pv-quoteDate").textContent = formatDate(document.getElementById("quoteDate").value);
+  document.getElementById("pv-validUntil").textContent = formatDate(document.getElementById("validUntil").value);
+  document.getElementById("pv-vehicleType").textContent = document.getElementById("vehicleType").value;
+
+  document.getElementById("pv-clientName").textContent = document.getElementById("clientName").value || "-";
+  document.getElementById("pv-clientAddress").textContent = document.getElementById("clientAddress").value || "-";
+  document.getElementById("pv-clientContact").textContent = document.getElementById("clientContact").value || "-";
+  const gstin = document.getElementById("clientGSTIN").value;
+  document.getElementById("pv-clientGSTIN").textContent = gstin ? ("GSTIN: " + gstin) : "";
+
+  document.getElementById("pv-origin").textContent = document.getElementById("origin").value || "-";
+  document.getElementById("pv-destination").textContent = document.getElementById("destination").value || "-";
+  document.getElementById("pv-distance").textContent = document.getElementById("distance").value || "-";
+  document.getElementById("pv-transitTime").textContent = document.getElementById("transitTime").value || "-";
+
+  // Line items
+  const pvBody = document.getElementById("pv-lineItemsBody");
+  pvBody.innerHTML = "";
+  document.querySelectorAll("#lineItemsBody tr").forEach(row => {
+    const desc = row.querySelector(".li-desc").value || "-";
+    const qty = row.querySelector(".li-qty").value || "0";
+    const unit = row.querySelector(".li-unit").value;
+    const rate = parseFloat(row.querySelector(".li-rate").value || 0).toFixed(2);
+    const amount = row.querySelector(".li-amount").textContent;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${desc}</td><td>${qty}</td><td>${unit}</td><td>₹${rate}</td><td>₹${amount}</td>`;
+    pvBody.appendChild(tr);
+  });
+
+  document.getElementById("pv-subtotal").textContent = document.getElementById("subtotalDisplay").textContent;
+  document.getElementById("pv-gstPercent").textContent = document.getElementById("gstPercent").value;
+  document.getElementById("pv-gst").textContent = document.getElementById("gstDisplay").textContent;
+  document.getElementById("pv-grandTotal").textContent = document.getElementById("grandTotalDisplay").textContent;
+
+  // GST toggle in preview
+  const isGST = document.getElementById("gstApplicable").value === "yes";
+  document.getElementById("pv-gstRow").style.display = isGST ? "table-row" : "none";
+  const gstClauseEl = document.getElementById("pv-gstClause");
+  if(isGST){
+    gstClauseEl.textContent = "GST is applicable on this invoice as requested by the client, and will be charged extra at " + (document.getElementById("gstPercent").value || "0") + "% as per prevailing government rates.";
+  } else {
+    gstClauseEl.textContent = "GST is not applicable on this freight service. If a GST invoice is required by the client, GST will be charged extra as per prevailing government rates.";
+  }
+
+  // Advance payment
+  const advanceType = document.getElementById("advanceType").value;
+  const advanceValue = parseFloat(document.getElementById("advanceValue").value) || 0;
+  if(advanceValue > 0){
+    document.getElementById("pv-advanceWrap").style.display = "block";
+    if(advanceType === "percent"){
+      const grandTotalNum = parseFloat(document.getElementById("grandTotalDisplay").textContent.replace(/,/g,"")) || 0;
+      const advanceAmount = grandTotalNum * (advanceValue/100);
+      document.getElementById("pv-advancePayment").textContent = advanceValue + "% (₹ " + advanceAmount.toFixed(2) + ") of the total quotation amount";
+    } else {
+      document.getElementById("pv-advancePayment").textContent = "₹ " + advanceValue.toFixed(2);
+    }
+  } else {
+    document.getElementById("pv-advanceWrap").style.display = "none";
+  }
+
+  // Detention rate
+  const detention = document.getElementById("detentionRate").value;
+  const detentionEl = document.getElementById("pv-detentionRateText");
+  if(detention && detention.trim() !== ""){
+    detentionEl.textContent = " — rate: " + detention + " (if applicable)";
+  } else {
+    detentionEl.textContent = "";
+  }
+
+  const notes = document.getElementById("extraNotes").value;
+  if(notes && notes.trim() !== ""){
+    document.getElementById("pv-extraNotesWrap").style.display = "block";
+    document.getElementById("pv-extraNotes").textContent = notes;
+  } else {
+    document.getElementById("pv-extraNotesWrap").style.display = "none";
+  }
+
+  const element = document.getElementById("pdf-preview");
+  const opt = {
+    margin: 0,
+    filename: (document.getElementById("quoteNumber").value || "NexRoad-Quotation") + ".pdf",
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 794 },
+    jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
+  };
+  html2pdf().set(opt).from(element).save();
+}
+
+// Initialize
+window.onload = function(){
+  const today = new Date();
+  document.getElementById("quoteDate").value = today.toISOString().split('T')[0];
+  const validDate = new Date(today);
+  validDate.setDate(validDate.getDate() + 7);
+  document.getElementById("validUntil").value = validDate.toISOString().split('T')[0];
+
+  addLineItem("Freight charges - Full Truck Load", 1, "Trip", 0);
+  calculateTotals();
+};
+</script>
+
+</body>
+</html>

@@ -738,7 +738,19 @@ function generatePDF(){
     margin: 0,
     filename: (document.getElementById("quoteNumber").value || "NexRoad-Quotation") + ".pdf",
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 794 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      onclone: function(clonedDoc){
+        const clonedEl = clonedDoc.getElementById("pdf-preview");
+        if(clonedEl && clonedEl.parentElement){
+          clonedEl.parentElement.style.position = "static";
+          clonedEl.parentElement.style.left = "0";
+          clonedEl.parentElement.style.top = "0";
+        }
+      }
+    },
     jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
   };
   html2pdf().set(opt).from(element).save();
